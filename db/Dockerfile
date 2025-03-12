@@ -10,4 +10,6 @@ COPY ./scripts /scripts
 
 # Make the import_data.sh script executable
 RUN dos2unix /scripts/import_data.sh && \
-    chmod +x /scripts/import_data.sh
+    chmod +x /scripts/import_data.sh && \
+    dos2unix /scripts/download_data.sh && \
+    chmod +x /scripts/download_data.sh

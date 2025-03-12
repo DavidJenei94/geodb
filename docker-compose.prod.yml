@@ -2,17 +2,13 @@ services:
   geodb-postgis:
     container_name: postgis
     restart: unless-stopped
-    build:
-      context: ./db
+    image: davidjenei94/geodb-postgis:latest
     environment:
       POSTGRES_USER: osm
       POSTGRES_PASSWORD: osm
       POSTGRES_DB: gis
     ports:
       - "5444:5432"
-    volumes:
-      - ./db/data:/data
-      - ./db/scripts:/scripts
     networks:
       - geodb_network
       - wpv-network
@@ -20,12 +16,9 @@ services:
   geodb-backend:
     container_name: geodb-backend
     restart: unless-stopped
-    build:
-      context: ./backend
+    image: davidjenei94/geodb-backend:latest
     depends_on:
       - geodb-postgis
-    volumes:
-      - ./backend:/app
     environment:
       SERVER_PORT: 8011
       POSTGRES_HOST: postgis

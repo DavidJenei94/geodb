@@ -27,6 +27,8 @@ area["name"="Szeged"]["admin_level"="8"]->.searchArea;
   node["amenity"="college"](area.searchArea);
   way["amenity"="college"](area.searchArea);
   relation["amenity"="college"](area.searchArea);
+  
+  way["highway"~"primary|secondary|tertiary"](area.searchArea);
 );
 // Get complete ways with their nodes
 (._;>;);
