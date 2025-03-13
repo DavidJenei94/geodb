@@ -2,7 +2,7 @@
 Project for geoinfo database course
 
 ## Setup:
-- simply: `docker exec postgis bash -c "/scripts/download_data.sh && osmium cat -o /data/data.osm.pbf /data/data.osm && /scripts/import_data.sh"`
+- simply: `docker exec postgis bash -c "mkdir /data && /scripts/download_data.sh && osmium cat -o /data/data.osm.pbf /data/data.osm && /scripts/import_data.sh"`
 or:
 - download data from overpassturbo with download_data.sh
 - convert data to correct pbf format with osmium: `osmium cat -o data.osm.pbf data.osm` 
@@ -14,9 +14,13 @@ or:
 - `docker push davidjenei94/geodb-backend`
 - `docker build -t davidjenei94/geodb-postgis -f db/Dockerfile ./db`
 - `docker push davidjenei94/geodb-postgis`
+- rebuild on server: `docker compose pull geodb-backend geodb-postgis` AND `docker compose up --build -d`
 
 # Copy docker-compose.yml file to remote server
 `scp path_to_file\docker-compose.prod.yml user@server_ip:absolute_path/docker-compose.yml`
 
 # Copy frontend folder contents to remote server dist directory
 `scp -r path_to_file\frontend\* user@server_ip:absolute_path/`
+
+scp C:\Users\jenei\projects\geodb\docker-compose.prod.yml davidjenei@84.247.170.99:/srv/geodb/docker-compose.yml
+scp -r C:\Users\jenei\projects\geodb\frontend\* davidjenei@84.247.170.99:/srv/geodb/dist/

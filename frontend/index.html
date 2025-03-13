@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Leaflet Map</title>
+    <title>GeoDB projekt</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -11,11 +11,11 @@
     <div class="container">
       <div id="menu">
         <h1>Új írószerbolt üzleti megvalósítása</h1>
-        <button id="getData" onclick="getData()">Get Data</button>
-        <button id="showArea" onclick="showArea()">Show Area</button>
+        <button id="getData" onclick="getData()">Adatok betöltése</button>
+        <button id="showArea" onclick="showArea()">Területek mutatása</button>
         <div class="filter-controls">
           <label for="weightFilter"
-            >Minimum Weight: <span id="weightValue">1</span></label
+            >Minimális átfedés: <span id="weightValue">1</span></label
           >
           <input
             type="range"
@@ -27,7 +27,7 @@
             oninput="updateWeightFilter(this.value)"
           />
         </div>
-        <button id="clearMap" onclick="clearMap()">Clear Map</button>
+        <button id="clearMap" onclick="clearMap()">Térkép kiürítése</button>
       </div>
       <div id="map"></div>
     </div>

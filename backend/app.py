@@ -277,7 +277,7 @@ async def get_area(area: str = Query(...)):
         if conn:
             conn.close()
 
-@app.get("/")
+@app.get("/geodb/")
 async def read_root():
     # Server is running on port 8011
     return {"Server": "Running on port {PORT}"}
