@@ -2,7 +2,7 @@
 Project for geoinfo database course
 
 ## Setup:
-- simply: `docker exec postgis bash -c "mkdir /data && /scripts/download_data.sh && osmium cat -o /data/data.osm.pbf /data/data.osm && /scripts/import_data.sh"`
+- simply: `docker exec postgis bash -c "mkdir -p /data && /scripts/download_data.sh && osmium cat -o /data/data.osm.pbf /data/data.osm --overwrite && /scripts/import_data.sh"`
 or:
 - download data from overpassturbo with download_data.sh
 - convert data to correct pbf format with osmium: `osmium cat -o data.osm.pbf data.osm` 

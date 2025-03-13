@@ -27,8 +27,16 @@ area["name"="Szeged"]["admin_level"="8"]->.searchArea;
   node["amenity"="college"](area.searchArea);
   way["amenity"="college"](area.searchArea);
   relation["amenity"="college"](area.searchArea);
+
+  node["amenity"="university"](area.searchArea);
+  way["amenity"="university"](area.searchArea);
+  relation["amenity"="university"](area.searchArea);
   
   way["highway"~"primary|secondary|tertiary"](area.searchArea);
+
+  node["highway"="bus_stop"](area.searchArea);
+  node["public_transport"="platform"](area.searchArea);
+  node["railway"="tram_stop"](area.searchArea);
 );
 // Get complete ways with their nodes
 (._;>;);

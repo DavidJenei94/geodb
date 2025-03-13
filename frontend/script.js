@@ -170,8 +170,9 @@ function getColorForFeature(feature) {
   if (props.shop === 'department_store') return '#9933ff'; // Purple
   if (props.amenity === 'school') return '#ff3333'; // Red
   if (props.amenity === 'college') return '#ff66b2'; // Pink
+  if (props.amenity === 'university') return '#ff66b2'; // Pink
 
-  return '#888888'; // Default color: gray
+  return '#888888'; // Default color: gray - for stops
 }
 
 // Variable to store the rendered area layer for potential shop locations
@@ -235,7 +236,9 @@ function renderAreas(areaData) {
 
       // Color coding based on weight ranges
       let fillColor = '#ff7800'; // Default: orange
-      if (weight >= 4) {
+      if (weight >= 5) {
+        fillColor = '#7700AA'; // Very high weight: purple
+      } else if (weight >= 4) {
         fillColor = '#0022AA'; // High weight: blue
       } else if (weight >= 3) {
         fillColor = '#007888'; // Medium weight: teal

@@ -54,7 +54,10 @@ async def get_points():
         FROM planet_osm_point
         WHERE 
             shop IN ('stationery', 'supermarket', 'department_store')
-            OR amenity IN ('school', 'college')
+            OR amenity IN ('school', 'college', 'university')
+            OR highway = 'bus_stop'
+            OR public_transport = 'platform'
+            OR railway = 'tram_stop'
             
         UNION ALL
         
@@ -70,7 +73,10 @@ async def get_points():
         FROM planet_osm_polygon
         WHERE 
             shop IN ('stationery', 'supermarket', 'department_store')
-            OR amenity IN ('school', 'college')
+            OR amenity IN ('school', 'college', 'university')
+            OR highway = 'bus_stop'
+            OR public_transport = 'platform'
+            OR railway = 'tram_stop'
             
         UNION ALL
         
@@ -145,7 +151,7 @@ async def get_area(area: str = Query(...)):
                 osm_id,
                 ST_Buffer(ST_Transform(way, 4326)::geography, 300)::geometry AS geom
             FROM planet_osm_point
-            WHERE amenity IN ('school', 'college')
+            WHERE amenity IN ('school', 'college', 'university')
             
             UNION ALL
             
@@ -153,7 +159,7 @@ async def get_area(area: str = Query(...)):
                 osm_id,
                 ST_Buffer(ST_Transform(ST_Centroid(way), 4326)::geography, 300)::geometry AS geom
             FROM planet_osm_polygon
-            WHERE amenity IN ('school', 'college')
+            WHERE amenity IN ('school', 'college', 'university')
         ),
         
         -- Create road buffers (100m)
@@ -162,6 +168,16 @@ async def get_area(area: str = Query(...)):
                 ST_Buffer(ST_Transform(way, 4326)::geography, 100)::geometry AS geom
             FROM planet_osm_line
             WHERE highway IN ('primary', 'secondary', 'tertiary')
+        ),
+
+        -- Create transport stop buffers (100m)
+        transport_stop_buffers AS (
+            SELECT 
+                ST_Buffer(ST_Transform(way, 4326)::geography, 100)::geometry AS geom
+            FROM planet_osm_point
+            WHERE highway = 'bus_stop'
+            OR public_transport = 'platform'
+            OR railway = 'tram_stop'
         ),
         
         -- Create stationery shop buffers (250m)
@@ -179,9 +195,13 @@ async def get_area(area: str = Query(...)):
             WHERE shop IN ('stationery', 'supermarket', 'department_store')
         ),
         
-        -- Merge all road buffers into a single geometry
-        merged_roads AS (
-            SELECT ST_Union(geom) AS geom FROM road_buffers
+        -- Merge all road and transport stop buffers into a single geometry
+        merged_roads_and_stops AS (
+            SELECT ST_Union(geom) AS geom FROM (
+                SELECT geom FROM road_buffers
+                UNION ALL
+                SELECT geom FROM transport_stop_buffers
+            ) AS combined
         ),
         
         -- Merge all stationery buffers into a single geometry
@@ -194,7 +214,7 @@ async def get_area(area: str = Query(...)):
             SELECT 
                 s.osm_id,
                 ST_Intersection(s.geom, r.geom) AS geom
-            FROM school_buffers s, merged_roads r
+            FROM school_buffers s, merged_roads_and_stops r
             WHERE ST_Intersects(s.geom, r.geom)
         ),
         
