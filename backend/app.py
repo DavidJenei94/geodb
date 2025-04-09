@@ -145,8 +145,8 @@ async def get_points():
 async def get_area(area: str = Query(...)):
     """
     Get potential locations for new stationery shops based on:
-    - Proximity to schools/colleges (within 300m)
-    - Proximity to roads (within 100m)
+    - Proximity to schools/colleges (5min walk)
+    - Proximity to roads and stops (within 200m)
     - No existing stationery shops nearby (250m buffer)
     - Weighted by overlapping school service areas
     """
@@ -162,18 +162,18 @@ async def get_area(area: str = Query(...)):
             WHERE range_seconds = 300
         ),
         
-        -- Get roads (original geometries, not buffers)
-        roads AS (
+        -- Create road buffers (200m)
+        road_buffers AS (
             SELECT 
-                way AS geom
+                ST_Buffer(ST_Transform(way, 4326)::geography, 200)::geometry AS geom
             FROM planet_osm_line
             WHERE highway IN ('primary', 'secondary', 'tertiary')
         ),
 
-        -- Get transport stops (original geometries, not buffers)
-        transport_stops AS (
+        -- Create transport stop buffers (200m)
+        transport_stop_buffers AS (
             SELECT 
-                way AS geom
+                ST_Buffer(ST_Transform(way, 4326)::geography, 200)::geometry AS geom
             FROM planet_osm_point
             WHERE highway = 'bus_stop'
             OR public_transport = 'platform'
@@ -194,34 +194,27 @@ async def get_area(area: str = Query(...)):
             FROM planet_osm_polygon
             WHERE shop IN ('stationery', 'supermarket')
         ),
+
+        -- Merge all road and transport stop buffers into a single geometry
+        merged_roads_and_stops AS (
+            SELECT ST_Union(geom) AS geom FROM (
+                SELECT geom FROM road_buffers
+                UNION ALL
+                SELECT geom FROM transport_stop_buffers
+            ) AS combined
         
         -- Merge all stationery buffers into a single geometry
         merged_stationery AS (
             SELECT ST_Union(geom) AS geom FROM stationery_buffers
         ),
         
-        -- Find areas of school isochrones that are near roads (within 10m threshold)
+        -- Find areas of school buffers that intersect with roads and stops
         school_road_intersection AS (
             SELECT 
                 s.osm_id,
-                s.geom
-            FROM school_buffers s
-            WHERE EXISTS (
-                SELECT 1 FROM roads r
-                WHERE ST_DWithin(
-                    ST_Transform(s.geom, 3857), 
-                    ST_Transform(r.geom, 3857),
-                    10
-                )
-            )
-            AND EXISTS (
-                SELECT 1 FROM transport_stops t
-                WHERE ST_DWithin(
-                    ST_Transform(s.geom, 3857), 
-                    ST_Transform(t.geom, 3857),
-                    10
-                )
-            )
+                ST_Intersection(s.geom, r.geom) AS geom
+            FROM school_buffers s, merged_roads_and_stops r
+            WHERE ST_Intersects(s.geom, r.geom)
         ),
         
         -- Subtract stationery buffers from intersections

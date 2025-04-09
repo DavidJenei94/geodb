@@ -60,11 +60,11 @@ function hideLoading(buttonId, success) {
 
 // Layer visibility control
 let layerVisibility = {
-  schools: true,
-  stationery: true,
-  supermarkets: true,
-  stops: true,
-  roads: true,
+  schools: false,
+  stationery: false,
+  supermarkets: false,
+  stops: false,
+  roads: false,
 };
 
 // Setup layer control event listeners
