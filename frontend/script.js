@@ -60,7 +60,7 @@ function hideLoading(buttonId, success) {
 
 // Layer visibility control
 let layerVisibility = {
-  schools: false,
+  schools: true,
   stationery: false,
   supermarkets: false,
   stops: false,
@@ -445,18 +445,18 @@ function clearMap() {
 
   // Reset all checkboxes to checked
   document.getElementById('show-schools').checked = true;
-  document.getElementById('show-stationery').checked = true;
-  document.getElementById('show-supermarkets').checked = true;
-  document.getElementById('show-stops').checked = true;
-  document.getElementById('show-roads').checked = true;
+  document.getElementById('show-stationery').checked = false;
+  document.getElementById('show-supermarkets').checked = false;
+  document.getElementById('show-stops').checked = false;
+  document.getElementById('show-roads').checked = false;
 
   // Reset visibility settings
   layerVisibility = {
     schools: true,
-    stationery: true,
-    supermarkets: true,
-    stops: true,
-    roads: true,
+    stationery: false,
+    supermarkets: false,
+    stops: false,
+    roads: false,
   };
 }
 
