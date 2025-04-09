@@ -202,7 +202,8 @@ async def get_area(area: str = Query(...)):
                 UNION ALL
                 SELECT geom FROM transport_stop_buffers
             ) AS combined
-        
+        ),
+
         -- Merge all stationery buffers into a single geometry
         merged_stationery AS (
             SELECT ST_Union(geom) AS geom FROM stationery_buffers
