@@ -9,6 +9,9 @@ or:
 - import data to postgis db with import_data.sh
 - (check data in terminal: `psql -h postgis -U osm -d gis -c "SELECT * FROM planet_osm_point"` - pwd: osm, exit with q)
 
+## Isochrone setup
+- `docker exec geodb-backend bash -c "python getSchoolRange.py"`
+
 ## Rebuild docker containers:
 - `docker build -t davidjenei94/geodb-backend -f backend/Dockerfile ./backend`
 - `docker push davidjenei94/geodb-backend`
@@ -21,3 +24,6 @@ or:
 
 # Copy frontend folder contents to remote server dist directory
 `scp -r path_to_file\frontend\* user@server_ip:absolute_path/`
+
+scp C:\Users\jenei\projects\geodb\docker-compose.prod.yml davidjenei@84.247.170.99:/srv/geodb/docker-compose.yml
+scp -r C:\Users\jenei\projects\geodb\frontend\* davidjenei@84.247.170.99:/srv/geodb/dist/

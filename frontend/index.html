@@ -5,18 +5,28 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="container">
       <div id="menu">
         <h1>Új írószerbolt üzleti megvalósítása</h1>
-        <button id="getData" onclick="getData()">Adatok betöltése</button>
-        <button id="showArea" onclick="showArea()">Területek mutatása</button>
+        <button id="getData" class="btn" onclick="getData()">
+          Adatok betöltése
+          <div class="spinner"></div>
+        </button>
+        <button id="showArea" class="btn" onclick="showArea()">
+          Területek mutatása
+          <div class="spinner"></div>
+        </button>
         <div class="filter-controls">
-          <label for="weightFilter"
-            >Minimális átfedés: <span id="weightValue">1</span></label
-          >
+          <label for="weightFilter">
+            Minimális átfedés: <span id="weightValue">1</span>
+          </label>
           <input
             type="range"
             id="weightFilter"
@@ -27,7 +37,145 @@
             oninput="updateWeightFilter(this.value)"
           />
         </div>
-        <button id="clearMap" onclick="clearMap()">Térkép kiürítése</button>
+
+        <!-- Filter section -->
+        <div class="layer-controls">
+          <h3>Rétegek megjelenítése</h3>
+          <div class="checkbox-container">
+            <div class="checkbox-item">
+              <input type="checkbox" id="show-schools" checked />
+              <label for="show-schools">Iskolák, egyetemek</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="show-stationery" checked />
+              <label for="show-stationery">Írószerboltok</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="show-supermarkets" checked />
+              <label for="show-supermarkets">Szupermarketek</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="show-stops" checked />
+              <label for="show-stops">Megállók</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="show-roads" checked />
+              <label for="show-roads">Utak</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legend Section -->
+        <div class="legend-container">
+          <!-- Points/Icons Legend -->
+          <div class="legend-section">
+            <h3>Térképi jelölések</h3>
+            <div class="legend-items">
+              <div class="legend-item">
+                <span
+                  class="legend-icon"
+                  style="background-color: #ff3333"
+                ></span>
+                <span>Iskola</span>
+              </div>
+              <div class="legend-item">
+                <span
+                  class="legend-icon"
+                  style="background-color: #ff66b2"
+                ></span>
+                <span>Egyetem, Főiskola</span>
+              </div>
+              <div class="legend-item">
+                <span
+                  class="legend-icon"
+                  style="background-color: #33cc33"
+                ></span>
+                <span>Írószerbolt</span>
+              </div>
+              <div class="legend-item">
+                <span
+                  class="legend-icon"
+                  style="background-color: #3388ff"
+                ></span>
+                <span>Szupermarket</span>
+              </div>
+              <div class="legend-item">
+                <span
+                  class="legend-icon"
+                  style="background-color: #888888"
+                ></span>
+                <span>Megálló</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Roads Legend -->
+          <div class="legend-section">
+            <h3>Utak</h3>
+            <div class="legend-items">
+              <div class="legend-item">
+                <span
+                  class="legend-line"
+                  style="background-color: #ff0000; height: 4px"
+                ></span>
+                <span>Főút</span>
+              </div>
+              <div class="legend-item">
+                <span
+                  class="legend-line"
+                  style="background-color: #ff4400; height: 3px"
+                ></span>
+                <span>Másodrendű út</span>
+              </div>
+              <div class="legend-item">
+                <span
+                  class="legend-line"
+                  style="background-color: #ff6600; height: 2px"
+                ></span>
+                <span>Harmadrendű út</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Areas Legend -->
+          <div class="legend-section">
+            <h3>Javasolt területek</h3>
+            <div class="legend-items">
+              <div class="legend-item">
+                <span
+                  class="legend-area"
+                  style="background-color: #ff7800"
+                ></span>
+                <span>Alacsony átfedés (2-)</span>
+              </div>
+              <div class="legend-item">
+                <span
+                  class="legend-area"
+                  style="background-color: #007888"
+                ></span>
+                <span>Közepes átfedés (3)</span>
+              </div>
+              <div class="legend-item">
+                <span
+                  class="legend-area"
+                  style="background-color: #0022aa"
+                ></span>
+                <span>Magas átfedés (4)</span>
+              </div>
+              <div class="legend-item">
+                <span
+                  class="legend-area"
+                  style="background-color: #7700aa"
+                ></span>
+                <span>Nagyon magas átfedés (5+)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button id="clearMap" class="btn" onclick="clearMap()">
+          Térkép kiürítése
+        </button>
       </div>
       <div id="map"></div>
     </div>

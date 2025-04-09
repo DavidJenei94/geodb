@@ -1,82 +1,342 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Roboto', Arial, sans-serif;
+  color: #333;
 }
 
 .container {
   display: flex;
   flex-direction: row;
   height: 100dvh;
+}
 
-  #menu {
-    width: 400px;
-    height: 100%;
-    text-align: center;
+#menu {
+  width: 400px;
+  height: 100%;
+  text-align: center;
+  background-color: #f8f9fa;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
 
-    #getData,
-    #showArea {
-      display: inline-block;
-      z-index: 1000;
-      background: white;
-      padding: 10px;
-      border: 1px solid #ccc;
-      cursor: pointer;
-    }
+h1 {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  margin-bottom: 25px;
+}
 
-    .filter-controls {
-      margin: 20px 0;
-      padding: 10px;
-      background-color: #f5f5f5;
-      border-radius: 5px;
+.btn {
+  display: inline-block;
+  padding: 10px 15px;
+  margin: 5px;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s, transform 0.1s;
+  position: relative;
+}
 
-      label {
-        display: block;
-        margin-bottom: 5px;
-      }
+.btn:hover {
+  background-color: #3367d6;
+  transform: translateY(-2px);
+}
 
-      input[type='range'] {
-        width: 90%;
-        margin: 10px 0;
-      }
-    }
+.btn:active {
+  transform: translateY(0);
+}
 
-    #clearMap {
-      margin-top: 15px;
-      background-color: #ff6b6b;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 4px;
-      cursor: pointer;
+#getData,
+#showArea {
+  width: 80%;
+  margin-bottom: 10px;
+}
 
-      &:hover {
-        background-color: #ff4040;
-      }
-    }
+#clearMap {
+  background-color: #ea4335;
+}
+
+#clearMap:hover {
+  background-color: #d32f2f;
+}
+
+.filter-controls {
+  margin: 25px 0;
+  padding: 15px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.filter-controls label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.filter-controls input[type='range'] {
+  width: 90%;
+  margin: 15px 0;
+  height: 5px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #ddd;
+  outline: none;
+  border-radius: 5px;
+}
+
+.filter-controls input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4285f4;
+  cursor: pointer;
+}
+
+.filter-controls input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4285f4;
+  cursor: pointer;
+}
+
+#map {
+  display: inline-block;
+  width: calc(100vw - 400px);
+  height: 100%;
+}
+
+/* Loading spinner */
+.spinner {
+  display: none;
+  margin-left: 10px;
+  width: 16px;
+  height: 16px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+@keyframes spin {
+  to {
+    transform: translateY(-50%) rotate(360deg);
   }
+}
 
-  #map {
-    display: inline-block;
-    width: calc(100vw - 400px);
-    height: 100%;
-  }
+.btn.loading .spinner {
+  display: inline-block;
+}
+
+.btn.loading {
+  padding-right: 35px;
+}
+
+.btn.success {
+  background-color: #34a853;
 }
 
 /* Mobile responsive layout */
 @media screen and (max-width: 768px) {
   .container {
     flex-direction: column;
+  }
 
-    #menu {
-      width: 100%;
-      height: auto;
-      padding: 10px 0;
-    }
+  #menu {
+    width: 100%;
+    height: auto;
+    padding: 15px;
+  }
 
-    #map {
-      width: 100vw;
-      height: 80dvh;
-    }
+  #map {
+    width: 100vw;
+    height: 70dvh;
+  }
+
+  h1 {
+    font-size: 1.2rem;
+    margin: 10px 0;
+  }
+}
+
+/* Popup styling */
+.popup-content {
+  padding: 5px;
+}
+
+.popup-content h3 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+.popup-content ul {
+  margin: 0;
+  padding: 0 0 0 20px;
+}
+
+.popup-content li {
+  margin-bottom: 5px;
+}
+
+/* Legend styling */
+.legend-container {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+
+.legend-section {
+  margin-bottom: 15px;
+}
+
+.legend-section h3 {
+  color: #2c3e50;
+  font-size: 16px;
+  margin: 0 0 10px 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  flex-basis: 45%;
+  font-size: 12px;
+}
+
+.legend-icon {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 5px;
+  border: 1px solid #333;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 20px;
+  height: 3px;
+  margin-right: 5px;
+  border-radius: 1px;
+}
+
+.legend-area {
+  display: inline-block;
+  width: 20px;
+  height: 12px;
+  margin-right: 5px;
+  border-radius: 2px;
+  opacity: 0.7;
+  border: 1px solid #333;
+}
+
+/* Responsive adjustments for legend */
+@media screen and (max-width: 768px) {
+  .legend-item {
+    flex-basis: 100%;
+  }
+
+  .legend-container {
+    margin: 10px 0;
+    padding: 10px;
+  }
+}
+
+/* Layer control checkboxes */
+.layer-controls {
+  margin: 25px 0;
+  padding: 15px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+
+.layer-controls h3 {
+  color: #2c3e50;
+  font-size: 16px;
+  margin: 0 0 15px 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.checkbox-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  flex-basis: 45%;
+  font-size: 14px;
+}
+
+.checkbox-item input[type='checkbox'] {
+  margin-right: 8px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 16px;
+  width: 16px;
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  position: relative;
+  transition: background-color 0.3s;
+}
+
+.checkbox-item input[type='checkbox']:checked {
+  background-color: #4285f4;
+  border-color: #4285f4;
+}
+
+.checkbox-item input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-item label {
+  cursor: pointer;
+}
+
+/* Responsive adjustment for checkboxes */
+@media screen and (max-width: 768px) {
+  .checkbox-item {
+    flex-basis: 100%;
   }
 }

@@ -32,19 +32,94 @@ let osmLayer = L.tileLayer(
 ).addTo(map);
 
 /**
+ * Shows loading spinner for a button
+ * @param {string} buttonId - ID of the button to show loading state
+ */
+function showLoading(buttonId) {
+  const button = document.getElementById(buttonId);
+  button.classList.add('loading');
+  button.disabled = true;
+  button.classList.remove('success');
+}
+
+/**
+ * Hides loading spinner for a button
+ * @param {string} buttonId - ID of the button to hide loading state
+ * @param {boolean} success - Indicates if the operation was successful
+ */
+function hideLoading(buttonId, success) {
+  const button = document.getElementById(buttonId);
+  button.classList.remove('loading');
+  button.disabled = false;
+  if (success) {
+    button.classList.add('success');
+  } else {
+    button.classList.remove('success');
+  }
+}
+
+// Layer visibility control
+let layerVisibility = {
+  schools: true,
+  stationery: true,
+  supermarkets: true,
+  stops: true,
+  roads: true,
+};
+
+// Setup layer control event listeners
+document.addEventListener('DOMContentLoaded', function () {
+  // Attach listeners to checkboxes
+  document
+    .getElementById('show-schools')
+    .addEventListener('change', function () {
+      layerVisibility.schools = this.checked;
+      if (layers && layers.features) renderLayers();
+    });
+
+  document
+    .getElementById('show-stationery')
+    .addEventListener('change', function () {
+      layerVisibility.stationery = this.checked;
+      if (layers && layers.features) renderLayers();
+    });
+
+  document
+    .getElementById('show-supermarkets')
+    .addEventListener('change', function () {
+      layerVisibility.supermarkets = this.checked;
+      if (layers && layers.features) renderLayers();
+    });
+
+  document.getElementById('show-stops').addEventListener('change', function () {
+    layerVisibility.stops = this.checked;
+    if (layers && layers.features) renderLayers();
+  });
+
+  document.getElementById('show-roads').addEventListener('change', function () {
+    layerVisibility.roads = this.checked;
+    if (layers && layers.features) renderLayers();
+  });
+});
+
+/**
  * Fetches points of interest and roads data from the server
  * and renders them on the map
  */
 function getData() {
+  showLoading('getData');
   fetch(`${URL_BASE}/geodb/data`)
     .then((response) => response.json())
     .then((data) => {
       layers = data; // Store the fetched data
       console.log(layers);
       renderLayers(); // Render the data on the map
+      hideLoading('getData', true);
     })
     .catch((error) => {
       console.error('Error fetching data:', error);
+      hideLoading('getData', false);
+      alert('Hiba történt az adatok betöltése közben.');
     });
 }
 
@@ -58,72 +133,138 @@ function renderLayers() {
     map.removeLayer(window.featureLayer);
   }
 
-  // Create a GeoJSON layer with custom styling and popups
-  window.featureLayer = L.geoJSON(layers, {
-    // Custom styling for line features (roads)
-    style: function (feature) {
+  if (window.roadLayer) {
+    map.removeLayer(window.roadLayer);
+  }
+
+  if (window.pointLayer) {
+    map.removeLayer(window.pointLayer);
+  }
+
+  // Check if layers is a GeoJSON FeatureCollection
+  if (!layers || !layers.features) {
+    console.error('Invalid layer data structure');
+    return;
+  }
+
+  // Separate road features and point features
+  const roadFeatures = {
+    type: 'FeatureCollection',
+    features: layers.features.filter((feature) => {
+      // Only include roads that should be visible
+      if (
+        (feature.geometry.type === 'LineString' ||
+          feature.geometry.type === 'MultiLineString') &&
+        layerVisibility.roads
+      ) {
+        return true;
+      }
+      return false;
+    }),
+  };
+
+  const pointFeatures = {
+    type: 'FeatureCollection',
+    features: layers.features.filter((feature) => {
+      // Skip road features
       if (
         feature.geometry.type === 'LineString' ||
         feature.geometry.type === 'MultiLineString'
       ) {
-        return {
-          weight: getWeightForRoad(feature), // Line thickness based on road type
-          color: getColorForRoad(feature), // Color based on road type
-          opacity: 0.7,
-        };
+        return false;
       }
-    },
-    // Custom marker styling for point features (POIs)
-    pointToLayer: function (feature, latlng) {
-      if (feature.geometry.type === 'Point') {
-        let markerOptions = {
-          radius: 8,
-          fillColor: getColorForFeature(feature), // Color based on POI type
-          color: '#000',
-          weight: 1,
-          opacity: 1,
-          fillOpacity: 0.8,
-        };
 
-        return L.circleMarker(latlng, markerOptions);
+      const props = feature.properties;
+
+      // Transport stops
+      if (
+        props.highway === 'bus_stop' ||
+        props.public_transport === 'platform' ||
+        props.railway === 'tram_stop'
+      ) {
+        return layerVisibility.stops;
       }
+
+      // Educational institutions
+      if (
+        props.amenity === 'school' ||
+        props.amenity === 'college' ||
+        props.amenity === 'university'
+      ) {
+        return layerVisibility.schools;
+      }
+
+      // Stationery shops
+      if (props.shop === 'stationery' || props.shop === 'books') {
+        return layerVisibility.stationery;
+      }
+
+      // Supermarkets
+      if (props.shop === 'supermarket') {
+        return layerVisibility.supermarkets;
+      }
+
+      // Default: show if not categorized
+      return true;
+    }),
+  };
+
+  // Create road layer FIRST (so it's on the bottom)
+  window.roadLayer = L.geoJSON(roadFeatures, {
+    style: function (feature) {
+      return {
+        weight: getWeightForRoad(feature),
+        color: getColorForRoad(feature),
+        opacity: 0.7,
+      };
     },
-    // Create custom popups for each feature
     onEachFeature: function (feature, layer) {
-      let popupContent;
-
-      // Different popup content for roads vs POIs
-      if (feature.properties.highway) {
-        // Popup content for roads
-        popupContent = `
-          <div class="popup-content">
-            <h3>${feature.properties.name || 'Unnamed Road'}</h3>
-            <ul>
-              <li><strong>Road Type:</strong> ${feature.properties.highway}</li>
-              <li><strong>ID:</strong> ${feature.properties.id}</li>
-            </ul>
-          </div>
-        `;
-      } else {
-        // Popup content for POIs (schools, shops, etc.)
-        popupContent = `
-          <div class="popup-content">
-            <h3>${feature.properties.name || 'Unnamed'}</h3>
-            <ul>
-              <li><strong>Type:</strong> ${
-                feature.properties.shop ||
-                feature.properties.amenity ||
-                'Unknown'
-              }</li>
-              <li><strong>ID:</strong> ${feature.properties.id}</li>
-            </ul>
-          </div>
-        `;
-      }
-
+      let popupContent = `
+        <div class="popup-content">
+          <h3>${feature.properties.name || 'Unnamed Road'}</h3>
+          <ul>
+            <li><strong>Road Type:</strong> ${feature.properties.highway}</li>
+            <li><strong>ID:</strong> ${feature.properties.id}</li>
+          </ul>
+        </div>
+      `;
       layer.bindPopup(popupContent);
     },
   }).addTo(map);
+
+  // Create point layer SECOND (so it's on top)
+  window.pointLayer = L.geoJSON(pointFeatures, {
+    pointToLayer: function (feature, latlng) {
+      let markerOptions = {
+        radius: 8,
+        fillColor: getColorForFeature(feature),
+        color: '#000',
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8,
+        zIndex: 1000,
+      };
+
+      return L.circleMarker(latlng, markerOptions);
+    },
+    onEachFeature: function (feature, layer) {
+      let popupContent = `
+        <div class="popup-content">
+          <h3>${feature.properties.name || 'Unnamed'}</h3>
+          <ul>
+            <li><strong>Type:</strong> ${
+              feature.properties.shop || feature.properties.amenity || 'Unknown'
+            }</li>
+            <li><strong>ID:</strong> ${feature.properties.id}</li>
+          </ul>
+        </div>
+      `;
+      layer.bindPopup(popupContent);
+    },
+  }).addTo(map);
+
+  // For backward compatibility
+  window.featureLayer = window.pointLayer;
 }
 
 /**
@@ -167,7 +308,6 @@ function getColorForFeature(feature) {
   if (props.shop === 'supermarket') return '#3388ff'; // Blue
   if (props.shop === 'stationery') return '#33cc33'; // Green
   if (props.shop === 'books') return '#ff9900'; // Orange
-  if (props.shop === 'department_store') return '#9933ff'; // Purple
   if (props.amenity === 'school') return '#ff3333'; // Red
   if (props.amenity === 'college') return '#ff66b2'; // Pink
   if (props.amenity === 'university') return '#ff66b2'; // Pink
@@ -198,15 +338,19 @@ function updateWeightFilter(value) {
  * and absence of competing shops
  */
 function showArea() {
+  showLoading('showArea');
   fetch(`${URL_BASE}/geodb/area?area=szeged`)
     .then((response) => response.json())
     .then((data) => {
       console.log('Area data:', data);
       areaData = data; // Store the data for filtering
       renderAreas(data);
+      hideLoading('showArea', true);
     })
     .catch((error) => {
       console.error('Error fetching area data:', error);
+      hideLoading('showArea', false);
+      alert('Hiba történt a területi adatok betöltése közben.');
     });
 }
 
@@ -274,9 +418,17 @@ function renderAreas(areaData) {
  * Removes all data layers from the map and resets the application state
  */
 function clearMap() {
-  // Remove feature layer if it exists
+  // Remove feature layers if they exist
   if (window.featureLayer) {
     map.removeLayer(window.featureLayer);
+  }
+
+  if (window.roadLayer) {
+    map.removeLayer(window.roadLayer);
+  }
+
+  if (window.pointLayer) {
+    map.removeLayer(window.pointLayer);
   }
 
   // Remove area layer if it exists
@@ -287,6 +439,25 @@ function clearMap() {
   // Reset stored data
   layers = [];
   areaData = null;
+
+  document.getElementById('getData').classList.remove('success');
+  document.getElementById('showArea').classList.remove('success');
+
+  // Reset all checkboxes to checked
+  document.getElementById('show-schools').checked = true;
+  document.getElementById('show-stationery').checked = true;
+  document.getElementById('show-supermarkets').checked = true;
+  document.getElementById('show-stops').checked = true;
+  document.getElementById('show-roads').checked = true;
+
+  // Reset visibility settings
+  layerVisibility = {
+    schools: true,
+    stationery: true,
+    supermarkets: true,
+    stops: true,
+    roads: true,
+  };
 }
 
 // Automatic data loading on page load - disabled for manual control

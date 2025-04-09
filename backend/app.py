@@ -49,11 +49,13 @@ async def get_points():
             ST_AsGeoJSON(ST_Transform(way, 4326)) as geom,
             amenity, 
             shop,
-            NULL as highway,
+            highway,
+            public_transport,
+            railway,
             'node' as osm_type
         FROM planet_osm_point
         WHERE 
-            shop IN ('stationery', 'supermarket', 'department_store')
+            shop IN ('stationery', 'supermarket')
             OR amenity IN ('school', 'college', 'university')
             OR highway = 'bus_stop'
             OR public_transport = 'platform'
@@ -68,11 +70,13 @@ async def get_points():
             ST_AsGeoJSON(ST_Transform(ST_Centroid(way), 4326)) as geom,
             amenity,
             shop,
-            NULL as highway,
+            highway,
+            public_transport,
+            railway,
             'way' as osm_type
         FROM planet_osm_polygon
         WHERE 
-            shop IN ('stationery', 'supermarket', 'department_store')
+            shop IN ('stationery', 'supermarket')
             OR amenity IN ('school', 'college', 'university')
             OR highway = 'bus_stop'
             OR public_transport = 'platform'
@@ -88,6 +92,8 @@ async def get_points():
             NULL as amenity,
             NULL as shop,
             highway,
+            NULL as public_transport,
+            NULL as railway,
             'way' as osm_type
         FROM planet_osm_line
         WHERE 
@@ -95,7 +101,7 @@ async def get_points():
     """
     
     # Limit results for performance
-    query += " LIMIT 2000"
+    query += " LIMIT 10000"
     
     # Connect to the database and execute the query
     try:
@@ -114,6 +120,8 @@ async def get_points():
                     'amenity': row['amenity'],
                     'shop': row['shop'],
                     'highway': row['highway'],
+                    'public_transport': row.get('public_transport'),
+                    'railway': row.get('railway'), 
                 }
                 
                 # Remove None values
@@ -145,35 +153,27 @@ async def get_area(area: str = Query(...)):
     
     query = """
         WITH 
-        -- Create school buffers (300m)
+        -- Use precomputed isochrones for schools instead of simple buffers
         school_buffers AS (
             SELECT 
-                osm_id,
-                ST_Buffer(ST_Transform(way, 4326)::geography, 300)::geometry AS geom
-            FROM planet_osm_point
-            WHERE amenity IN ('school', 'college', 'university')
-            
-            UNION ALL
-            
-            SELECT 
-                osm_id,
-                ST_Buffer(ST_Transform(ST_Centroid(way), 4326)::geography, 300)::geometry AS geom
-            FROM planet_osm_polygon
-            WHERE amenity IN ('school', 'college', 'university')
+                school_id as osm_id,
+                way AS geom
+            FROM school_isochrones
+            WHERE range_seconds = 300
         ),
         
-        -- Create road buffers (100m)
-        road_buffers AS (
+        -- Get roads (original geometries, not buffers)
+        roads AS (
             SELECT 
-                ST_Buffer(ST_Transform(way, 4326)::geography, 100)::geometry AS geom
+                way AS geom
             FROM planet_osm_line
             WHERE highway IN ('primary', 'secondary', 'tertiary')
         ),
 
-        -- Create transport stop buffers (100m)
-        transport_stop_buffers AS (
+        -- Get transport stops (original geometries, not buffers)
+        transport_stops AS (
             SELECT 
-                ST_Buffer(ST_Transform(way, 4326)::geography, 100)::geometry AS geom
+                way AS geom
             FROM planet_osm_point
             WHERE highway = 'bus_stop'
             OR public_transport = 'platform'
@@ -185,23 +185,14 @@ async def get_area(area: str = Query(...)):
             SELECT 
                 ST_Buffer(ST_Transform(way, 4326)::geography, 250)::geometry AS geom
             FROM planet_osm_point
-            WHERE shop IN ('stationery', 'supermarket', 'department_store')
+            WHERE shop IN ('stationery', 'supermarket')
             
             UNION ALL
             
             SELECT 
                 ST_Buffer(ST_Transform(ST_Centroid(way), 4326)::geography, 250)::geometry AS geom
             FROM planet_osm_polygon
-            WHERE shop IN ('stationery', 'supermarket', 'department_store')
-        ),
-        
-        -- Merge all road and transport stop buffers into a single geometry
-        merged_roads_and_stops AS (
-            SELECT ST_Union(geom) AS geom FROM (
-                SELECT geom FROM road_buffers
-                UNION ALL
-                SELECT geom FROM transport_stop_buffers
-            ) AS combined
+            WHERE shop IN ('stationery', 'supermarket')
         ),
         
         -- Merge all stationery buffers into a single geometry
@@ -209,13 +200,28 @@ async def get_area(area: str = Query(...)):
             SELECT ST_Union(geom) AS geom FROM stationery_buffers
         ),
         
-        -- Find areas of school buffers that intersect with roads
+        -- Find areas of school isochrones that are near roads (within 10m threshold)
         school_road_intersection AS (
             SELECT 
                 s.osm_id,
-                ST_Intersection(s.geom, r.geom) AS geom
-            FROM school_buffers s, merged_roads_and_stops r
-            WHERE ST_Intersects(s.geom, r.geom)
+                s.geom
+            FROM school_buffers s
+            WHERE EXISTS (
+                SELECT 1 FROM roads r
+                WHERE ST_DWithin(
+                    ST_Transform(s.geom, 3857), 
+                    ST_Transform(r.geom, 3857),
+                    10
+                )
+            )
+            AND EXISTS (
+                SELECT 1 FROM transport_stops t
+                WHERE ST_DWithin(
+                    ST_Transform(s.geom, 3857), 
+                    ST_Transform(t.geom, 3857),
+                    10
+                )
+            )
         ),
         
         -- Subtract stationery buffers from intersections

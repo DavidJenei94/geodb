@@ -4,7 +4,7 @@ import os
 def install_requirements():
     # Directory of the current script + relative path
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(script_dir, '../requirements.txt')
+    file_path = os.path.join(script_dir, './requirements.txt')
 
     try:
         # Open and read each line from the requirements.txt file
