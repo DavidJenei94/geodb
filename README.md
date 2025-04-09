@@ -24,6 +24,3 @@ or:
 
 # Copy frontend folder contents to remote server dist directory
 `scp -r path_to_file\frontend\* user@server_ip:absolute_path/`
-
-scp C:\Users\jenei\projects\geodb\docker-compose.prod.yml davidjenei@84.247.170.99:/srv/geodb/docker-compose.yml
-scp -r C:\Users\jenei\projects\geodb\frontend\* davidjenei@84.247.170.99:/srv/geodb/dist/
