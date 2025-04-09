@@ -10,7 +10,7 @@ or:
 - (check data in terminal: `psql -h postgis -U osm -d gis -c "SELECT * FROM planet_osm_point"` - pwd: osm, exit with q)
 
 ## Isochrone setup
-- `docker exec geodb-backend bash -c "python getSchoolRange.py"`
+- `docker exec -it geodb-backend bash -c "python getSchoolRange.py"`
 
 ## Rebuild docker containers:
 - `docker build -t davidjenei94/geodb-backend -f backend/Dockerfile ./backend`
